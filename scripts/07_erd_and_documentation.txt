@@ -1,0 +1,154 @@
+================================================================================
+  STUDENT HEALTH & FITNESS MONITORING SYSTEM (SHFMS)
+  Entity Relationship Diagram (Text-based ERD)
+================================================================================
+
+ASCII ERD Representation:
+========================
+
+┌─────────────────┐
+│     User        │ (Central authentication table)
+├─────────────────┤
+│ UserID (PK)     │
+│ Username        │
+│ PasswordHash    │
+│ Role            │
+│ Email           │
+│ CreatedDate     │
+└────────┬────────┘
+         │
+    ┌────┴────────────────────────────────┐
+    │                                     │
+    ▼                                     ▼
+┌──────────────┐                  ┌──────────────┐
+│   Student    │                  │    Coach     │
+├──────────────┤                  ├──────────────┤
+│ StudentID(PK)│◄─ FK_UserID ─────│ CoachID(PK)  │
+│ FirstName    │      1:1         │ FirstName    │
+│ LastName     │                  │ LastName     │
+│ DateOfBirth  │                  │ Certification
+│ Gender       │                  │ ContactPhone │
+│ EmergContact │                  │ FK_UserID    │
+│ FK_UserID    │                  └──────────────┘
+└────┬─────────┘
+     │
+     ├──────────────────┐
+     │                  │
+     ▼                  ▼
+┌──────────────────┐  ┌──────────────────┐
+│ HealthProfile    │  │   FitnessLog     │
+├──────────────────┤  ├──────────────────┤
+│ ProfileID (PK)   │  │ LogID (PK)       │
+│ Height           │  │ ActivityType     │
+│ BloodType        │  │ DurationMinutes  │
+│ Allergies        │  │ CaloriesBurned   │
+│ ChronicConditions│  │ Distance         │
+│ FK_StudentID(UNQ)│  │ LogDate          │
+│ 1:1 Relationship │  │ FK_StudentID     │
+└──────────────────┘  └────────┬─────────┘
+                               │
+                               ├──────────────────┐
+                               │                  │
+                               ▼                  ▼
+                        ┌──────────────────┐  ┌──────────────────┐
+                        │ CoachFitnessRev  │  │      Goal        │
+                        ├──────────────────┤  ├──────────────────┤
+                        │ ReviewID (PK)    │  │ GoalID (PK)      │
+                        │ ReviewDate       │  │ GoalType         │
+                        │ ReviewNotes      │  │ TargetValue      │
+                        │ FK_CoachID       │  │ StartDate        │
+                        │ FK_LogID         │  │ EndDate          │
+                        │ M:M Relationship │  │ IsAchieved       │
+                        └──────────────────┘  │ FK_StudentID     │
+                                              └──────────────────┘
+
+     │
+     ├──────────────────┐
+     │                  │
+     ▼                  ▼
+┌──────────────────┐  ┌──────────────────┐
+│  MedicalRecord   │  │   Appointment    │
+├──────────────────┤  ├──────────────────┤
+│ RecordID (PK)    │  │ AppointmentID(PK)│
+│ VisitDate        │  │ AppointmentDate  │
+│ Diagnosis        │  │ AppointmentTime  │
+│ Prescription     │  │ Reason           │
+│ Notes            │  │ Status           │
+│ FK_NurseID       │  │ FK_StudentID     │
+│ FK_StudentID     │  │ FK_NurseID       │
+└──────────────────┘  └──────────────────┘
+     ▲                       ▲
+     │                       │
+     │                       │
+     └───────────────────────┘
+                │
+                ▼
+         ┌──────────────┐
+         │    Nurse     │
+         ├──────────────┤
+         │ NurseID (PK) │
+         │ FirstName    │
+         │ LastName     │
+         │ LicenseNumber│
+         │ FK_UserID    │
+         └──────────────┘
+                │
+                └─ FK_UserID ───► User (1:1)
+
+     Also related to Coach:
+     
+┌──────────────────┐
+│  TrainingPlan    │
+├──────────────────┤
+│ PlanID (PK)      │
+│ PlanName         │
+│ Description      │
+│ StartDate        │
+│ EndDate          │
+│ FK_CoachID       │
+└────────┬─────────┘
+         │
+         ▼
+┌──────────────────┐
+│   PlanDetail     │
+├──────────────────┤
+│ DetailID (PK)    │
+│ DayOfWeek        │
+│ ExerciseName     │
+│ Sets             │
+│ Reps             │
+│ FK_PlanID        │
+└──────────────────┘
+
+
+Relationship Summary:
+====================
+1. User (1) ──────── (M) Student
+2. User (1) ──────── (M) Coach
+3. User (1) ──────── (M) Nurse
+4. Student (1) ──── (1) HealthProfile
+5. Student (1) ──── (M) FitnessLog
+6. Coach (1) ─────── (M) TrainingPlan
+7. TrainingPlan (1) ─── (M) PlanDetail
+8. FitnessLog (M) ──────── (M) Coach [via CoachFitnessReview]
+9. Nurse (1) ─────── (M) MedicalRecord
+10. Nurse (1) ──── (M) Appointment
+11. Student (1) ──── (M) MedicalRecord
+12. Student (1) ──── (M) Goal
+13. Student (1) ──── (M) Appointment
+
+
+Key Features:
+=============
+✓ Role-based access control (Student, Coach, Nurse, Admin)
+✓ Health profile tracking with chronic conditions
+✓ Fitness activity logging and monitoring
+✓ Goal tracking with achievement status
+✓ Medical record management
+✓ Appointment scheduling
+✓ Training plan creation and tracking
+✓ Coach fitness reviews (M:M relationship)
+✓ Automatic ID generation via sequences and triggers
+✓ Comprehensive views for reporting
+✓ Business logic via stored procedures
+================================================================================
