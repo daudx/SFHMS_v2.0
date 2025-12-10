@@ -29,30 +29,49 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { Dumbbell, Plus, Eye } from "lucide-react";
+import { Dumbbell, Plus } from "lucide-react";
 import { toast } from "sonner";
 
+import { useRouter } from "next/navigation";
+
 export default function TrainingPlansPage() {
+  const router = useRouter();
   const [plans, setPlans] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [coachId, setCoachId] = useState<number | null>(null);
   const [formData, setFormData] = useState({
     planName: "",
     description: "",
     startDate: "",
     endDate: "",
-    coachId: "1", // TODO: Get from session
+    coachId: "",
   });
 
   useEffect(() => {
-    fetchPlans();
-  }, []);
+    // Get coach info from session
+    const userStr = sessionStorage.getItem("user");
+    if (userStr) {
+      const user = JSON.parse(userStr);
+      if (user.role !== "Coach") {
+        toast.error("Access denied. Coach role required.");
+        router.push("/dashboard");
+        return;
+      }
+      const coachIdToUse = user.coachId || user.userId;
+      setCoachId(coachIdToUse);
+      setFormData(prev => ({ ...prev, coachId: coachIdToUse.toString() }));
+      fetchPlans(coachIdToUse);
+    } else {
+      toast.error("Please login first");
+      router.push("/auth/login");
+    }
+  }, [router]);
 
-  const fetchPlans = async () => {
+  const fetchPlans = async (coachIdParam: number) => {
     try {
       setLoading(true);
-      // TODO: Add coachId from session for filtering
-      const response = await fetch("/api/training-plans");
+      const response = await fetch(`/api/training-plans?coachId=${coachIdParam}`);
       const data = await response.json();
       setPlans(data.data || []);
     } catch (error) {
@@ -79,9 +98,9 @@ export default function TrainingPlansPage() {
           description: "",
           startDate: "",
           endDate: "",
-          coachId: "1",
+          coachId: coachId?.toString() || "",
         });
-        fetchPlans();
+        if (coachId) fetchPlans(coachId);
       } else {
         toast.error("Failed to create training plan");
       }
@@ -213,7 +232,6 @@ export default function TrainingPlansPage() {
                   <TableHead>Start Date</TableHead>
                   <TableHead>End Date</TableHead>
                   <TableHead>Status</TableHead>
-                  <TableHead>Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -236,12 +254,6 @@ export default function TrainingPlansPage() {
                       <TableCell>
                         <Badge variant={status.variant}>{status.label}</Badge>
                       </TableCell>
-                      <TableCell>
-                        <Button size="sm" variant="outline">
-                          <Eye className="h-4 w-4 mr-1" />
-                          View Details
-                        </Button>
-                      </TableCell>
                     </TableRow>
                   );
                 })}
@@ -250,6 +262,6 @@ export default function TrainingPlansPage() {
           )}
         </CardContent>
       </Card>
-    </div>
+    </div >
   );
 }

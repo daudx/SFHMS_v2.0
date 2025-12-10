@@ -162,7 +162,7 @@ export default function LoginPage() {
                   <RoleIcon className="inline h-4 w-4 mr-1" />
                   {
                     roleDescriptions[
-                      formData.role as keyof typeof roleDescriptions
+                    formData.role as keyof typeof roleDescriptions
                     ]
                   }
                 </p>
@@ -244,7 +244,7 @@ export default function LoginPage() {
                   Students
                 </Badge>
                 <span className="text-sm text-muted-foreground">
-                  5 test accounts
+                  4 test accounts
                 </span>
               </div>
               <div className="grid grid-cols-2 gap-2">
@@ -260,20 +260,9 @@ export default function LoginPage() {
                   variant="outline"
                   size="sm"
                   onClick={() =>
-                    quickLogin("emma_student", "student123", "Student")
-                  }
-                  disabled={isLoading}
-                >
-                  emma_student
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() =>
                     quickLogin("alex_student", "student123", "Student")
                   }
                   disabled={isLoading}
-                  className="col-span-2"
                 >
                   alex_student
                 </Button>
