@@ -1,23 +1,24 @@
 import { type NextRequest, NextResponse } from "next/server"
 import oracledb from "oracledb"
+import bcrypt from "bcryptjs"
 import { getConnection } from "@/lib/db/oracle"
 
 export async function POST(request: NextRequest) {
   let connection
 
   try {
-    const { username, password, role } = await request.json()
+    const { email, password, role } = await request.json()
 
-    if (!username || !password || !role) {
+    if (!email || !password || !role) {
       return NextResponse.json(
-        { error: "Username, password, and role are required" },
+        { error: "Email, password, and role are required" },
         { status: 400 }
       )
     }
 
     connection = await getConnection()
 
-    // Query to verify user credentials
+    // Query to verify user credentials using EMAIL instead of username
     const result = await connection.execute(
       `SELECT 
         u.USERID,
@@ -27,24 +28,25 @@ export async function POST(request: NextRequest) {
         u.ROLE,
         u.CREATEDDATE
       FROM "User" u
-      WHERE u.USERNAME = :username 
+      WHERE LOWER(u.EMAIL) = LOWER(:email)
         AND u.ROLE = :role`,
-      { username, role },
+      { email, role },
       { outFormat: oracledb.OUT_FORMAT_OBJECT }
     )
 
     if (!result.rows || result.rows.length === 0) {
       return NextResponse.json(
-        { error: "Invalid username or role" },
+        { error: "Invalid email or role" },
         { status: 401 }
       )
     }
 
     const user = result.rows[0] as any
 
-    // In a real application, you would verify the password hash
-    // For this demo, we're doing a simple comparison
-    if (user.PASSWORDHASH !== password) {
+    // Verify password using bcrypt
+    const isPasswordValid = await bcrypt.compare(password, user.PASSWORDHASH)
+
+    if (!isPasswordValid) {
       return NextResponse.json(
         { error: "Invalid password" },
         { status: 401 }

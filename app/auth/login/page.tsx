@@ -26,7 +26,7 @@ import { toast } from "sonner";
 export default function LoginPage() {
   const router = useRouter();
   const [formData, setFormData] = useState({
-    username: "",
+    email: "",
     password: "",
     role: "Student",
   });
@@ -92,8 +92,8 @@ export default function LoginPage() {
     }
   };
 
-  const quickLogin = (username: string, password: string, role: string) => {
-    setFormData({ username, password, role });
+  const quickLogin = (email: string, password: string, role: string) => {
+    setFormData({ email, password, role });
     setTimeout(() => {
       document
         .getElementById("login-form")
@@ -118,7 +118,7 @@ export default function LoginPage() {
             <CardDescription>Sign in with your credentials</CardDescription>
           </CardHeader>
           <CardContent>
-            <form id="login-form" onSubmit={handleLogin} className="space-y-4">
+            <form id="login-form" onSubmit={handleLogin} className="space-y-4" autoComplete="off">
               {/* Role Selection */}
               <div className="space-y-2">
                 <Label htmlFor="role">Login As</Label>
@@ -168,19 +168,21 @@ export default function LoginPage() {
                 </p>
               </div>
 
-              {/* Username */}
+              {/* Email */}
               <div className="space-y-2">
-                <Label htmlFor="username">Username</Label>
+                <Label htmlFor="email">Email</Label>
                 <Input
-                  id="username"
-                  type="text"
-                  placeholder="Enter your username"
-                  value={formData.username}
+                  id="email"
+                  type="email"
+                  placeholder="ali@university.edu"
+                  value={formData.email}
                   onChange={(e) =>
-                    setFormData({ ...formData, username: e.target.value })
+                    setFormData({ ...formData, email: e.target.value })
                   }
                   required
+                  autoComplete="off"
                 />
+                <p className="text-xs text-muted-foreground">Enter your email address</p>
               </div>
 
               {/* Password */}
@@ -189,18 +191,27 @@ export default function LoginPage() {
                 <Input
                   id="password"
                   type="password"
-                  placeholder="Enter your password"
+                  placeholder="••••••••"
                   value={formData.password}
                   onChange={(e) =>
                     setFormData({ ...formData, password: e.target.value })
                   }
                   required
+                  autoComplete="off"
                 />
+                <p className="text-xs text-muted-foreground">Enter your password</p>
               </div>
 
               <Button type="submit" className="w-full" disabled={isLoading}>
                 {isLoading ? "Signing in..." : "Sign In"}
               </Button>
+
+              <div className="text-center text-sm text-muted-foreground mt-4">
+                Don't have an account?{" "}
+                <a href="/auth/signup" className="text-primary hover:underline font-medium">
+                  Sign Up
+                </a>
+              </div>
             </form>
           </CardContent>
         </Card>
@@ -228,11 +239,11 @@ export default function LoginPage() {
               <Button
                 variant="outline"
                 className="w-full justify-start"
-                onClick={() => quickLogin("daudx", "admin123", "Admin")}
+                onClick={() => quickLogin("daudx@university.edu", "admin123", "Admin")}
                 disabled={isLoading}
               >
                 <Shield className="mr-2 h-4 w-4" />
-                Login as daudx (Admin)
+                Login as Admin (daudx)
               </Button>
             </div>
 
@@ -251,20 +262,20 @@ export default function LoginPage() {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => quickLogin("bob_m", "student123", "Student")}
+                  onClick={() => quickLogin("sarah@university.edu", "student123", "Student")}
                   disabled={isLoading}
                 >
-                  bob_m
+                  Student 1
                 </Button>
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={() =>
-                    quickLogin("alex_student", "student123", "Student")
+                    quickLogin("alex@university.edu", "student123", "Student")
                   }
                   disabled={isLoading}
                 >
-                  alex_student
+                  Student 2
                 </Button>
               </div>
             </div>
@@ -284,18 +295,18 @@ export default function LoginPage() {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => quickLogin("mike_coach", "coach123", "Coach")}
+                  onClick={() => quickLogin("james@university.edu", "coach123", "Coach")}
                   disabled={isLoading}
                 >
-                  mike_coach
+                  Coach 1
                 </Button>
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => quickLogin("sarah_coach", "coach123", "Coach")}
+                  onClick={() => quickLogin("lisa@university.edu", "coach123", "Coach")}
                   disabled={isLoading}
                 >
-                  sarah_coach
+                  Coach 2
                 </Button>
               </div>
             </div>
@@ -316,19 +327,19 @@ export default function LoginPage() {
                   variant="outline"
                   size="sm"
                   onClick={() =>
-                    quickLogin("robert_nurse", "nurse123", "Nurse")
+                    quickLogin("robert.nurse@university.edu", "nurse123", "Nurse")
                   }
                   disabled={isLoading}
                 >
-                  robert_nurse
+                  Nurse 1
                 </Button>
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => quickLogin("linda_nurse", "nurse123", "Nurse")}
+                  onClick={() => quickLogin("linda.nurse@university.edu", "nurse123", "Nurse")}
                   disabled={isLoading}
                 >
-                  linda_nurse
+                  Nurse 2
                 </Button>
               </div>
             </div>

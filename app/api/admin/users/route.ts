@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { executeQuery } from "@/lib/db/oracle"
+import bcrypt from "bcryptjs"
 
 // GET all users
 export async function GET(request: NextRequest) {
@@ -38,7 +39,9 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const { username, password, role, email } = body
 
-    // TODO: Hash password before storing
+    // Hash password before storing
+    const passwordHash = await bcrypt.hash(password, 10)
+
     const sql = `
       INSERT INTO "User" (Username, PasswordHash, Role, Email)
       VALUES (:1, :2, :3, :4)
@@ -47,7 +50,7 @@ export async function POST(request: NextRequest) {
 
     const result = await executeQuery(sql, [
       username,
-      password, // Should be hashed
+      passwordHash,
       role,
       email,
       { dir: 3, type: 2 },

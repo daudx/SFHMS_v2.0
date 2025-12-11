@@ -12,14 +12,16 @@ export default function SignupPage() {
   const router = useRouter()
   const [formData, setFormData] = useState({
     name: "",
+    username: "",
     email: "",
     password: "",
     confirmPassword: "",
+    role: "Student",
   })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setFormData({
       ...formData,
       [e.target.name]: e.target.value,
@@ -35,8 +37,13 @@ export default function SignupPage() {
       return
     }
 
+    if (formData.password.length < 6) {
+      setError("Password must be at least 6 characters long")
+      return
+    }
+
     setLoading(true)
-    console.log("[v0] Signup attempt:", { email: formData.email })
+    console.log("[v0] Signup attempt:", { email: formData.email, role: formData.role })
 
     try {
       const response = await fetch("/api/auth/register", {
@@ -44,8 +51,10 @@ export default function SignupPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name: formData.name,
+          username: formData.username,
           email: formData.email,
           password: formData.password,
+          role: formData.role,
         }),
       })
 
@@ -75,7 +84,7 @@ export default function SignupPage() {
         </CardHeader>
         <CardContent>
           {error && <div className="mb-4 p-3 bg-red-100 text-red-700 rounded-lg text-sm">{error}</div>}
-          <form onSubmit={handleSignup} className="space-y-4">
+          <form onSubmit={handleSignup} className="space-y-4" autoComplete="off">
             <div>
               <label className="block text-sm font-medium mb-1">Full Name</label>
               <Input
@@ -85,7 +94,23 @@ export default function SignupPage() {
                 value={formData.name}
                 onChange={handleChange}
                 required
+                autoComplete="off"
               />
+              <p className="text-xs text-gray-500 mt-1">Enter your first and last name</p>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-1">Username</label>
+              <Input
+                type="text"
+                name="username"
+                placeholder="johndoe"
+                value={formData.username}
+                onChange={handleChange}
+                required
+                autoComplete="off"
+              />
+              <p className="text-xs text-gray-500 mt-1">You'll use this to login (must be unique)</p>
             </div>
 
             <div>
@@ -93,11 +118,30 @@ export default function SignupPage() {
               <Input
                 type="email"
                 name="email"
-                placeholder="your@email.com"
+                placeholder="john.doe@university.edu"
                 value={formData.email}
                 onChange={handleChange}
                 required
+                autoComplete="off"
               />
+              <p className="text-xs text-gray-500 mt-1">Your university email address</p>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-1">Role</label>
+              <select
+                name="role"
+                value={formData.role}
+                onChange={handleChange}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                required
+                autoComplete="off"
+              >
+                <option value="Student">Student</option>
+                <option value="Coach">Coach</option>
+                <option value="Nurse">Nurse</option>
+              </select>
+              <p className="text-xs text-gray-500 mt-1">Select your role in the system</p>
             </div>
 
             <div>
@@ -109,7 +153,10 @@ export default function SignupPage() {
                 value={formData.password}
                 onChange={handleChange}
                 required
+                minLength={6}
+                autoComplete="new-password"
               />
+              <p className="text-xs text-gray-500 mt-1">Minimum 6 characters</p>
             </div>
 
             <div>
@@ -121,7 +168,9 @@ export default function SignupPage() {
                 value={formData.confirmPassword}
                 onChange={handleChange}
                 required
+                autoComplete="new-password"
               />
+              <p className="text-xs text-gray-500 mt-1">Re-enter your password</p>
             </div>
 
             <Button type="submit" className="w-full" disabled={loading}>

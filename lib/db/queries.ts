@@ -5,41 +5,60 @@ import { executeQuery } from "./oracle"
 // User queries
 export async function createUser(data: {
   name: string
+  username: string
   email: string
   passwordHash: string
   role?: string
 }) {
   try {
     const role = data.role || 'Student'
-    
+
     // First, insert the user
     await executeQuery(
       `INSERT INTO "User" (Username, Email, PasswordHash, Role, CreatedDate) 
        VALUES (:1, :2, :3, :4, SYSDATE)`,
-      [data.name, data.email, data.passwordHash, role],
+      [data.username, data.email, data.passwordHash, role],
     )
-    
+
     // Get the UserID that was just created
     const userResult = await executeQuery(
       `SELECT UserID FROM "User" WHERE Email = :1`,
       [data.email]
     )
-    
+
     const userId = userResult.rows?.[0]?.USERID
-    
-    // If role is Student, create a Student record
-    if (role === 'Student' && userId) {
-      const nameParts = data.name.split(' ')
-      const firstName = nameParts[0] || 'Student'
-      const lastName = nameParts.slice(1).join(' ') || 'User'
-      
+
+    if (!userId) {
+      throw new Error("Failed to retrieve user ID after creation")
+    }
+
+    // Create role-specific record based on role
+    const nameParts = data.name.split(' ')
+    const firstName = nameParts[0] || 'User'
+    const lastName = nameParts.slice(1).join(' ') || 'Name'
+
+    if (role === 'Student') {
       await executeQuery(
         `INSERT INTO Student (FirstName, LastName, DateOfBirth, Gender, FK_UserID, CreatedDate)
          VALUES (:1, :2, TO_DATE('2000-01-01', 'YYYY-MM-DD'), 'Other', :3, SYSDATE)`,
         [firstName, lastName, userId]
       )
+    } else if (role === 'Coach') {
+      await executeQuery(
+        `INSERT INTO Coach (FirstName, LastName, Certification, FK_UserID, CreatedDate)
+         VALUES (:1, :2, 'Certified Fitness Coach', :3, SYSDATE)`,
+        [firstName, lastName, userId]
+      )
+    } else if (role === 'Nurse') {
+      // Generate a unique license number
+      const licenseNumber = `LN${Date.now()}`
+      await executeQuery(
+        `INSERT INTO Nurse (FirstName, LastName, LicenseNumber, FK_UserID, CreatedDate)
+         VALUES (:1, :2, :3, :4, SYSDATE)`,
+        [firstName, lastName, licenseNumber, userId]
+      )
     }
-    
+
     return { success: true, userId }
   } catch (error) {
     console.error("[v0] Error creating user:", error)
@@ -70,7 +89,7 @@ export async function getUserByEmail(email: string) {
 export async function getUserById(userId: number) {
   try {
     const result = await executeQuery(
-      `SELECT UserID, Username, Email, Role, CreatedDate FROM "User" WHERE UserID = :1`, 
+      `SELECT UserID, Username, Email, Role, CreatedDate FROM "User" WHERE UserID = :1`,
       [userId]
     )
     return result.rows?.[0] ? {
