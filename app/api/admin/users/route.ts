@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { executeQuery } from "@/lib/db/oracle"
+import { createUser } from "@/lib/db/queries"
 import bcrypt from "bcryptjs"
 
 // GET all users
@@ -37,29 +38,25 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { username, password, role, email } = body
+    const { username, password, role, email, fullName, details } = body
 
-    // Hash password before storing
+    // Hash password before storing - createUser expects hashed password
     const passwordHash = await bcrypt.hash(password, 10)
 
-    const sql = `
-      INSERT INTO "User" (Username, PasswordHash, Role, Email)
-      VALUES (:1, :2, :3, :4)
-      RETURNING UserID INTO :5
-    `
-
-    const result = await executeQuery(sql, [
+    // Use centralized createUser function to handle role-specific records
+    const result = await createUser({
+      name: fullName || username, // Use fullName or fallback to username
       username,
+      email,
       passwordHash,
       role,
-      email,
-      { dir: 3, type: 2 },
-    ])
+      details, // Pass the role-specific details
+    })
 
     return NextResponse.json({
       success: true,
       message: "User created successfully",
-      userId: result.outBinds?.[0],
+      userId: result.userId,
     })
   } catch (error) {
     console.error("Error creating user:", error)

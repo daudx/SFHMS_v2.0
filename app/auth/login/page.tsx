@@ -255,27 +255,27 @@ export default function LoginPage() {
                   Students
                 </Badge>
                 <span className="text-sm text-muted-foreground">
-                  4 test accounts
+                  2 test accounts
                 </span>
               </div>
               <div className="grid grid-cols-2 gap-2">
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => quickLogin("sarah@university.edu", "student123", "Student")}
+                  onClick={() => quickLogin("ali@university.edu", "student123", "Student")}
                   disabled={isLoading}
                 >
-                  Student 1
+                  Student 1 (Ali)
                 </Button>
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={() =>
-                    quickLogin("alex@university.edu", "student123", "Student")
+                    quickLogin("john@university.edu", "student123", "Student")
                   }
                   disabled={isLoading}
                 >
-                  Student 2
+                  Student 2 (John)
                 </Button>
               </div>
             </div>

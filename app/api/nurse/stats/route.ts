@@ -41,12 +41,11 @@ export async function GET(request: NextRequest) {
             { outFormat: 4001 }
         );
 
-        // Active patients (students with appointments in last 30 days)
+        // Assigned students (from Student table where FK_NurseID matches)
         const patientsResult = await connection.execute(
-            `SELECT COUNT(DISTINCT FK_StudentID) as TOTAL 
-       FROM Appointment 
-       WHERE FK_NurseID = :nurseId 
-       AND AppointmentDate >= SYSDATE - 30`,
+            `SELECT COUNT(*) as TOTAL 
+       FROM Student 
+       WHERE FK_NurseID = :nurseId`,
             { nurseId: parseInt(nurseId) },
             { outFormat: 4001 }
         );

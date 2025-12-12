@@ -20,7 +20,7 @@ export async function GET(request: NextRequest) {
         const result = await connection.execute(
             `SELECT 
         cfr.ReviewID,
-        cfr.ReviewDate,
+        TO_CHAR(cfr.ReviewDate, 'YYYY-MM-DD') as ReviewDate,
         cfr.ReviewNotes,
         cfr.FK_CoachID,
         cfr.FK_LogID,
@@ -28,7 +28,7 @@ export async function GET(request: NextRequest) {
         fl.DurationMinutes,
         fl.CaloriesBurned,
         fl.Distance,
-        fl.LogDate,
+        TO_CHAR(fl.LogDate, 'YYYY-MM-DD') as LogDate,
         s.StudentID,
         s.FirstName || ' ' || s.LastName as StudentName
       FROM CoachFitnessReview cfr
@@ -40,9 +40,24 @@ export async function GET(request: NextRequest) {
             { outFormat: 4001 }
         );
 
+        const reviews = (result.rows || []).map((row: any) => ({
+            reviewId: row.REVIEWID || row.ReviewID,
+            reviewDate: row.REVIEWDATE || row.ReviewDate,
+            reviewNotes: row.REVIEWNOTES || row.ReviewNotes,
+            coachId: row.FK_COACHID || row.FK_CoachID,
+            logId: row.FK_LOGID || row.FK_LogID,
+            activityType: row.ACTIVITYTYPE || row.ActivityType,
+            durationMinutes: row.DURATIONMINUTES || row.DurationMinutes,
+            caloriesBurned: row.CALORIESBURNED || row.CaloriesBurned,
+            distance: row.DISTANCE || row.Distance,
+            logDate: row.LOGDATE || row.LogDate,
+            studentId: row.STUDENTID,
+            studentName: row.STUDENTNAME || row.StudentName
+        }));
+
         return NextResponse.json({
             success: true,
-            reviews: result.rows || [],
+            reviews,
         });
     } catch (error: any) {
         console.error("Error fetching fitness reviews:", error);

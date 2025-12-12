@@ -36,31 +36,71 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const { planName, description, startDate, endDate, coachId } = body
 
+    console.log("Creating plan with:", { planName, description, startDate, endDate, coachId });
+
+    if (!planName || !startDate || !endDate || !coachId) {
+      return NextResponse.json(
+        { error: "Missing required fields: planName, startDate, endDate, coachId" },
+        { status: 400 }
+      )
+    }
+
     const sql = `
       INSERT INTO TrainingPlan (PlanName, Description, StartDate, EndDate, FK_CoachID)
       VALUES (:1, :2, TO_DATE(:3, 'YYYY-MM-DD'), TO_DATE(:4, 'YYYY-MM-DD'), :5)
-      RETURNING PlanID INTO :6
     `
 
-    const result = await executeQuery(sql, [
+    await executeQuery(sql, [
       planName,
-      description,
+      description || "",
       startDate,
       endDate,
-      coachId,
-      { dir: 3, type: 2 },
+      parseInt(coachId),
     ])
 
     return NextResponse.json({
       success: true,
-      message: "Training plan created successfully",
-      planId: result.outBinds?.[0],
+      message: "Training plan created successfully"
     })
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error creating training plan:", error)
     return NextResponse.json(
-      { error: "Failed to create training plan" },
+      { error: error.message || "Failed to create training plan" },
       { status: 500 }
     )
+  }
+}
+
+export async function DELETE(request: NextRequest) {
+  try {
+    const { searchParams } = new URL(request.url)
+    const planId = searchParams.get("planId")
+
+    if (!planId) return NextResponse.json({ error: "Missing planId" }, { status: 400 })
+
+    await executeQuery("DELETE FROM TrainingPlan WHERE PlanID = :1", [parseInt(planId)])
+
+    return NextResponse.json({ success: true, message: "Deleted" })
+  } catch (error) {
+    return NextResponse.json({ error: "Failed to delete" }, { status: 500 })
+  }
+}
+
+export async function PUT(request: NextRequest) {
+  try {
+    const body = await request.json()
+    const { planId, planName, description, startDate, endDate } = body
+
+    if (!planId) return NextResponse.json({ error: "Missing planId" }, { status: 400 })
+
+    const sql = `
+       UPDATE TrainingPlan 
+       SET PlanName = :1, Description = :2, StartDate = TO_DATE(:3, 'YYYY-MM-DD'), EndDate = TO_DATE(:4, 'YYYY-MM-DD')
+       WHERE PlanID = :5
+    `
+    await executeQuery(sql, [planName, description, startDate, endDate, parseInt(planId)])
+    return NextResponse.json({ success: true, message: "Updated" })
+  } catch (error) {
+    return NextResponse.json({ error: "Failed to update" }, { status: 500 })
   }
 }

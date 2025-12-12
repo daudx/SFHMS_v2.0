@@ -215,6 +215,7 @@ export default function GoalsPage() {
                 <TableRow>
                   <TableHead>Goal Type</TableHead>
                   <TableHead>Target</TableHead>
+                  <TableHead>Progress</TableHead>
                   <TableHead>Start Date</TableHead>
                   <TableHead>End Date</TableHead>
                   <TableHead>Status</TableHead>
@@ -228,6 +229,26 @@ export default function GoalsPage() {
                       {goal.GOALTYPE}
                     </TableCell>
                     <TableCell>{goal.TARGETVALUE}</TableCell>
+                    <TableCell>
+                      <div className="flex flex-col gap-1">
+                        <span className="text-sm font-medium">
+                          {goal.CURRENTPROGRESS || 0} / {goal.TARGETVALUE}
+                        </span>
+                        <div className="h-2 w-full bg-secondary rounded-full overflow-hidden">
+                          <div
+                            className="h-full bg-primary transition-all duration-500"
+                            style={{
+                              width: `${Math.min(
+                                100,
+                                ((goal.CURRENTPROGRESS || 0) /
+                                  goal.TARGETVALUE) *
+                                100
+                              )}%`,
+                            }}
+                          />
+                        </div>
+                      </div>
+                    </TableCell>
                     <TableCell>
                       {new Date(goal.STARTDATE).toLocaleDateString()}
                     </TableCell>

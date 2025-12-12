@@ -45,7 +45,7 @@ export async function getConnection() {
       password,
       connectString: `${host}:${port}/${sid}`,
     })
-    
+
     return connection
   } catch (error) {
     console.error("[API] Failed to connect to Oracle:", error)
@@ -69,17 +69,17 @@ export async function executeQuery(sql: string, bindParams: any[] = []) {
   let conn
   try {
     conn = await getConnection()
-    const options: any = { 
+    const options: any = {
       outFormat: oracledb.OUT_FORMAT_OBJECT,
       autoCommit: true
     }
-    
+
     // Check if we have an OUT parameter
-    const hasOutParam = bindParams.some(param => param && typeof param === 'object' && param.dir === 3)
+    const hasOutParam = bindParams.some(param => param && typeof param === 'object' && param.dir === 3003) // 3003 = BIND_OUT
     if (hasOutParam) {
       options.autoCommit = true
     }
-    
+
     const result = await conn.execute(sql, bindParams, options)
     return result
   } catch (error) {

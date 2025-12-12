@@ -38,7 +38,7 @@ export function NursesTable() {
   const [nurses, setNurses] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
-  const [isCreateOpen, setIsCreateOpen] = useState(false);
+  // Create state removed
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [selectedNurse, setSelectedNurse] = useState<any>(null);
@@ -66,37 +66,7 @@ export function NursesTable() {
     }
   };
 
-  const handleCreate = async (e: React.FormEvent) => {
-    e.preventDefault();
-    try {
-      const response = await fetch("/api/admin/nurses", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          userId: parseInt(formData.userId),
-          firstName: formData.firstName,
-          lastName: formData.lastName,
-          licenseNumber: formData.licenseNumber,
-        }),
-      });
-
-      if (response.ok) {
-        toast.success("Nurse created successfully");
-        setIsCreateOpen(false);
-        setFormData({
-          userId: "",
-          firstName: "",
-          lastName: "",
-          licenseNumber: "",
-        });
-        fetchNurses();
-      } else {
-        toast.error("Failed to create nurse");
-      }
-    } catch (error) {
-      toast.error("Error creating nurse");
-    }
-  };
+  // handleCreate removed - use Users Management tab instead
 
   const handleUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -175,82 +145,6 @@ export function NursesTable() {
             className="pl-9"
           />
         </div>
-        <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
-          <DialogTrigger asChild>
-            <Button>
-              <Plus className="h-4 w-4 mr-2" />
-              Add Nurse
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Create New Nurse</DialogTitle>
-              <DialogDescription>
-                Add a new nurse to the system
-              </DialogDescription>
-            </DialogHeader>
-            <form onSubmit={handleCreate} className="space-y-4">
-              <div>
-                <Label htmlFor="userId">User ID</Label>
-                <Input
-                  id="userId"
-                  type="number"
-                  value={formData.userId}
-                  onChange={(e) =>
-                    setFormData({ ...formData, userId: e.target.value })
-                  }
-                  required
-                />
-              </div>
-              <div>
-                <Label htmlFor="firstName">First Name</Label>
-                <Input
-                  id="firstName"
-                  value={formData.firstName}
-                  onChange={(e) =>
-                    setFormData({ ...formData, firstName: e.target.value })
-                  }
-                  placeholder="e.g., John"
-                  required
-                />
-              </div>
-              <div>
-                <Label htmlFor="lastName">Last Name</Label>
-                <Input
-                  id="lastName"
-                  value={formData.lastName}
-                  onChange={(e) =>
-                    setFormData({ ...formData, lastName: e.target.value })
-                  }
-                  placeholder="e.g., Doe"
-                  required
-                />
-              </div>
-              <div>
-                <Label htmlFor="licenseNumber">License Number</Label>
-                <Input
-                  id="licenseNumber"
-                  value={formData.licenseNumber}
-                  onChange={(e) =>
-                    setFormData({ ...formData, licenseNumber: e.target.value })
-                  }
-                  placeholder="e.g., RN123456"
-                  required
-                />
-              </div>
-              <div className="flex gap-2 justify-end">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setIsCreateOpen(false)}
-                >
-                  Cancel
-                </Button>
-                <Button type="submit">Create</Button>
-              </div>
-            </form>
-          </DialogContent>
-        </Dialog>
       </div>
 
       {loading ? (

@@ -6,15 +6,30 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url)
     const studentId = searchParams.get("studentId")
 
-    let sql = "SELECT * FROM Goal"
+    let sql = `
+      SELECT g.*,
+        (SELECT NVL(SUM(
+           CASE 
+             WHEN LOWER(g.GoalType) LIKE '%calorie%' THEN fl.CaloriesBurned
+             WHEN LOWER(g.GoalType) LIKE '%time%' OR LOWER(g.GoalType) LIKE '%duration%' THEN fl.DurationMinutes
+             WHEN LOWER(g.GoalType) LIKE '%distance%' OR LOWER(g.GoalType) LIKE '%km%' THEN fl.Distance
+             ELSE 0
+           END), 0)
+         FROM FitnessLog fl
+         WHERE fl.FK_StudentID = g.FK_StudentID
+         AND fl.LogDate >= g.StartDate
+         AND (g.EndDate IS NULL OR fl.LogDate <= g.EndDate)
+        ) as CurrentProgress
+      FROM Goal g
+    `
     const params: any[] = []
 
     if (studentId) {
-      sql += " WHERE FK_StudentID = :1"
+      sql += " WHERE g.FK_StudentID = :1"
       params.push(parseInt(studentId))
     }
 
-    sql += " ORDER BY CreatedDate DESC"
+    sql += " ORDER BY g.CreatedDate DESC"
 
     const result = await executeQuery(sql, params)
 

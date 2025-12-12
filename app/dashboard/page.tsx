@@ -1,246 +1,142 @@
 "use client";
-
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { CardDescription, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import {
-  Activity,
-  Heart,
-  TrendingUp,
-  Calendar,
-  ArrowUpRight,
-} from "lucide-react";
+import { Calendar, Activity, Dumbbell, Heart, Stethoscope, Clock } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function Dashboard() {
-  const [healthRecords, setHealthRecords] = useState([]);
-  const [activities, setActivities] = useState([]);
+  const [stats, setStats] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
+  const [userRole, setUserRole] = useState("");
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [recordsRes, activitiesRes] = await Promise.all([
-          fetch("/api/health-records"),
-          fetch("/api/fitness-activities"),
-        ]);
+    // Role check
+    const userStr = sessionStorage.getItem("user");
+    if (userStr) {
+      const user = JSON.parse(userStr);
+      setUserRole(user.role);
+      // If not student, redirect to respective dashboard (safety check, though header handles this)
+      if (user.role === "admin") router.push("/dashboard/admin");
+      if (user.role === "Coach") router.push("/dashboard/coach");
+      if (user.role === "Nurse") router.push("/dashboard/nurse");
 
-        // Check if user is not authenticated
-        if (recordsRes.status === 401 || activitiesRes.status === 401) {
-          router.push("/auth/signup");
-          return;
-        }
-
-        const records = await recordsRes.json();
-        const activityData = await activitiesRes.json();
-
-        setHealthRecords(records);
-        setActivities(activityData);
-      } catch (error) {
-        console.error("Error fetching dashboard data:", error);
-      } finally {
-        setLoading(false);
+      // Fetch stats only if student (or user)
+      if (user.role === "Student" || !user.role || user.role === "User") {
+        fetch("/api/student/dashboard")
+          .then(res => res.json())
+          .then(data => {
+            if (data.success) setStats(data.data);
+          })
+          .catch(console.error)
+          .finally(() => setLoading(false));
       }
-    };
-
-    fetchData();
+    } else {
+      router.push("/auth/login");
+    }
   }, [router]);
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-linear-to-b from-gray-50 to-white p-8">
-        <div className="max-w-6xl mx-auto">
-          <div className="grid md:grid-cols-2 gap-6">
-            {[1, 2, 3, 4].map((i) => (
-              <div key={i} className="skeleton h-64 rounded-lg" />
-            ))}
-          </div>
-        </div>
-      </div>
-    );
-  }
+  if (loading) return <div className="p-8 space-y-4"><Skeleton className="h-12 w-1/3" /><Skeleton className="h-64 w-full" /></div>;
 
   return (
-    <div className="min-h-screen bg-linear-to-b from-gray-50 to-white">
-      {/* Header */}
-      <div className="border-b border-gray-200 bg-white sticky top-0 z-40">
-        <div className="max-w-6xl mx-auto px-4 py-6">
-          <h1 className="text-3xl font-bold animate-slideInLeft">Dashboard</h1>
-          <p
-            className="text-gray-600 mt-1 animate-slideInLeft"
-            style={{ animationDelay: "0.1s" }}
-          >
-            Welcome back! Here's your health overview
-          </p>
-        </div>
+    <div className="min-h-screen bg-slate-50 p-6 space-y-6">
+      <div className="flex flex-col gap-2">
+        <h1 className="text-3xl font-bold text-slate-900">Dashboard Overview</h1>
+        <p className="text-slate-600">Welcome back! Here is your health & fitness summary.</p>
       </div>
 
-      <div className="max-w-6xl mx-auto px-4 py-8">
-        {/* Stats Grid */}
-        <div className="grid md:grid-cols-3 gap-6 mb-8">
-          <div className="card-premium p-6 animate-scaleUp">
-            <div className="flex justify-between items-start">
-              <div>
-                <p className="text-sm text-gray-600 font-semibold">
-                  Total Health Records
-                </p>
-                <p className="text-3xl font-bold mt-2">
-                  {healthRecords.length}
-                </p>
-              </div>
-              <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                <Heart className="w-6 h-6 text-blue-600" />
-              </div>
-            </div>
-          </div>
+      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {/* 1. Next Appointment */}
+        <Card className="border-l-4 border-l-blue-500 shadow-sm hover:shadow-md transition-shadow">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium text-slate-500">Next Appointment</CardTitle>
+            <Calendar className="h-4 w-4 text-blue-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats?.nextAppointment ? new Date(stats.nextAppointment.APPOINTMENTDATE).toLocaleDateString() : "No upcoming"}</div>
+            <p className="text-xs text-muted-foreground mt-1">
+              {stats?.nextAppointment ? stats.nextAppointment.TIME || "Time TBD" : "Check back later"}
+            </p>
+          </CardContent>
+        </Card>
 
-          <div
-            className="card-premium p-6 animate-scaleUp"
-            style={{ animationDelay: "0.1s" }}
-          >
-            <div className="flex justify-between items-start">
-              <div>
-                <p className="text-sm text-gray-600 font-semibold">
-                  Activities Logged
-                </p>
-                <p className="text-3xl font-bold mt-2">{activities.length}</p>
-              </div>
-              <div className="w-12 h-12 bg-emerald-100 rounded-lg flex items-center justify-center">
-                <Activity className="w-6 h-6 text-emerald-600" />
-              </div>
-            </div>
-          </div>
+        {/* 2. Latest Plan */}
+        <Card className="border-l-4 border-l-emerald-500 shadow-sm hover:shadow-md transition-shadow">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium text-slate-500">Active Plan</CardTitle>
+            <Dumbbell className="h-4 w-4 text-emerald-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold truncate">{stats?.latestPlan?.PLANNAME || "No active plan"}</div>
+            <p className="text-xs text-muted-foreground mt-1">
+              {stats?.latestPlan ? `Assigned: ${stats.latestPlan.ASSIGNEDDATE}` : "Ask your coach"}
+            </p>
+          </CardContent>
+        </Card>
 
-          <div
-            className="card-premium p-6 animate-scaleUp"
-            style={{ animationDelay: "0.2s" }}
-          >
-            <div className="flex justify-between items-start">
-              <div>
-                <p className="text-sm text-gray-600 font-semibold">
-                  Avg Calories Burned
-                </p>
-                <p className="text-3xl font-bold mt-2">
-                  {activities.length > 0
-                    ? Math.round(
-                        activities.reduce(
-                          (sum: number, a: any) =>
-                            sum + (a.calories_burned || 0),
-                          0
-                        ) / activities.length
-                      )
-                    : 0}
-                </p>
-              </div>
-              <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
-                <TrendingUp className="w-6 h-6 text-orange-600" />
-              </div>
-            </div>
-          </div>
-        </div>
+        {/* 3. Latest Assessment */}
+        <Card className="border-l-4 border-l-purple-500 shadow-sm hover:shadow-md transition-shadow">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium text-slate-500">Latest Assessment</CardTitle>
+            <Activity className="h-4 w-4 text-purple-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats?.latestAssessment?.PERFORMANCESCORE ? `Score: ${stats.latestAssessment.PERFORMANCESCORE}` : "N/A"}</div>
+            <p className="text-xs text-muted-foreground mt-1">
+              {stats?.latestAssessment ? `Date: ${stats.latestAssessment.ASSESSMENTDATE}` : "No assessments yet"}
+            </p>
+          </CardContent>
+        </Card>
 
-        {/* Content Grid */}
-        <div className="grid lg:grid-cols-2 gap-8">
-          {/* Recent Health Records */}
-          <div className="card-premium p-6 animate-slideInLeft">
-            <div className="flex justify-between items-center mb-6">
-              <div>
-                <CardTitle className="text-xl">Recent Health Records</CardTitle>
-                <CardDescription>
-                  Latest {Math.min(3, healthRecords.length)} entries
-                </CardDescription>
-              </div>
-              <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                <Heart className="w-5 h-5 text-blue-600" />
-              </div>
-            </div>
+        {/* 4. Recent Log */}
+        <Card className="border-l-4 border-l-orange-500 shadow-sm hover:shadow-md transition-shadow">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium text-slate-500">Recent Activity</CardTitle>
+            <Clock className="h-4 w-4 text-orange-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats?.recentLog?.ACTIVITYTYPE || "Inactive"}</div>
+            <p className="text-xs text-muted-foreground mt-1">
+              {stats?.recentLog ? new Date(stats.recentLog.LOGDATE).toLocaleDateString() : "Log your first workout!"}
+            </p>
+          </CardContent>
+        </Card>
 
-            {healthRecords.length > 0 ? (
-              <div className="space-y-3">
-                {healthRecords.slice(0, 3).map((record: any, idx: number) => (
-                  <div
-                    key={record.id}
-                    className="p-4 bg-linear-to-r from-blue-50 to-transparent rounded-lg border border-blue-100 hover:shadow-md hover:-translate-y-1 transition-all duration-300 animate-fadeIn"
-                    style={{ animationDelay: `${idx * 0.1}s` }}
-                  >
-                    <div className="flex justify-between items-start mb-2">
-                      <p className="font-semibold text-gray-900">
-                        {record.record_date}
-                      </p>
-                      <span className="inline-flex items-center gap-1 text-blue-600 text-xs font-semibold">
-                        <ArrowUpRight className="w-3 h-3" /> Updated
-                      </span>
-                    </div>
-                    <p className="text-sm text-gray-600">
-                      {record.notes || "No notes"}
-                    </p>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-12">
-                <Heart className="w-8 h-8 text-gray-300 mx-auto mb-2" />
-                <p className="text-gray-600">No health records yet</p>
-              </div>
-            )}
-            <Button className="w-full mt-4 btn-animate" asChild>
-              <a href="/dashboard/health-records">View All Records</a>
-            </Button>
-          </div>
+        {/* 5. Last Checkup */}
+        <Card className="border-l-4 border-l-red-500 shadow-sm hover:shadow-md transition-shadow">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium text-slate-500">Last Check-up</CardTitle>
+            <Stethoscope className="h-4 w-4 text-red-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats?.lastCheckup ? new Date(stats.lastCheckup).toLocaleDateString() : "Never"}</div>
+            <p className="text-xs text-muted-foreground mt-1">
+              Detailed records available
+            </p>
+          </CardContent>
+        </Card>
+      </div>
 
-          {/* Recent Activities */}
-          <div className="card-premium p-6 animate-slideInRight">
-            <div className="flex justify-between items-center mb-6">
-              <div>
-                <CardTitle className="text-xl">Recent Activities</CardTitle>
-                <CardDescription>
-                  Latest {Math.min(3, activities.length)} workouts
-                </CardDescription>
-              </div>
-              <div className="w-10 h-10 bg-emerald-100 rounded-lg flex items-center justify-center">
-                <Activity className="w-5 h-5 text-emerald-600" />
-              </div>
-            </div>
-
-            {activities.length > 0 ? (
-              <div className="space-y-3">
-                {activities.slice(0, 3).map((activity: any, idx: number) => (
-                  <div
-                    key={activity.id}
-                    className="p-4 bg-linear-to-r from-emerald-50 to-transparent rounded-lg border border-emerald-100 hover:shadow-md hover:-translate-y-1 transition-all duration-300 animate-fadeIn"
-                    style={{ animationDelay: `${idx * 0.1}s` }}
-                  >
-                    <div className="flex justify-between items-start mb-2">
-                      <p className="font-semibold text-gray-900">
-                        {activity.activity_type}
-                      </p>
-                      <span className="inline-flex items-center gap-1 text-emerald-600 text-xs font-semibold">
-                        <TrendingUp className="w-3 h-3" /> Active
-                      </span>
-                    </div>
-                    <div className="flex gap-4 text-sm text-gray-600">
-                      <span className="flex items-center gap-1">
-                        <Calendar className="w-3 h-3" />{" "}
-                        {activity.duration_minutes} min
-                      </span>
-                      <span>🔥 {activity.calories_burned} cal</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-12">
-                <Activity className="w-8 h-8 text-gray-300 mx-auto mb-2" />
-                <p className="text-gray-600">No activities logged yet</p>
-              </div>
-            )}
-            <Button className="w-full mt-4 btn-animate" asChild>
-              <a href="/dashboard/fitness-activities">Log New Activity</a>
-            </Button>
-          </div>
-        </div>
+      <div className="grid md:grid-cols-2 gap-6 mt-6">
+        {/* Quick Actions / Links */}
+        <Card>
+          <CardHeader><CardTitle>Quick Actions</CardTitle></CardHeader>
+          <CardContent className="grid gap-4">
+            <Button onClick={() => router.push('/dashboard/fitness-activities')} className="w-full justify-start" variant="outline"><Activity className="mr-2 h-4 w-4" /> Log New Activity</Button>
+            <Button onClick={() => router.push('/dashboard/my-plan')} className="w-full justify-start" variant="outline"><Dumbbell className="mr-2 h-4 w-4" /> View Training Plan</Button>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader><CardTitle>Medical Profile</CardTitle></CardHeader>
+          <CardContent className="grid gap-4">
+            <Button onClick={() => router.push('/dashboard/profile')} className="w-full justify-start" variant="outline"><Heart className="mr-2 h-4 w-4" /> View Health Profile</Button>
+            <Button onClick={() => router.push('/dashboard/medical-records')} className="w-full justify-start" variant="outline"><Stethoscope className="mr-2 h-4 w-4" /> View Clinical Records</Button>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
 }
+

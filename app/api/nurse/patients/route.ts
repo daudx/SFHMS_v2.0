@@ -32,13 +32,10 @@ export async function GET(request: NextRequest) {
          WHERE mr.FK_StudentID = s.StudentID AND mr.FK_NurseID = :nurseId) as RecordCount
       FROM Student s
       LEFT JOIN HealthProfile hp ON s.StudentID = hp.FK_StudentID
-      WHERE EXISTS (
-        SELECT 1 FROM Appointment a
-        WHERE a.FK_StudentID = s.StudentID AND a.FK_NurseID = :nurseId
-      )
+      WHERE s.FK_NurseID = :nurseId
       ORDER BY s.LastName, s.FirstName`,
             { nurseId: parseInt(nurseId) },
-            { outFormat: 4001 }
+            { outFormat: 4002 }
         );
 
         return NextResponse.json({

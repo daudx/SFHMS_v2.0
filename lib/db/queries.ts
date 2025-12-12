@@ -9,18 +9,29 @@ export async function createUser(data: {
   email: string
   passwordHash: string
   role?: string
+  details?: {
+    dateOfBirth?: string
+    gender?: string
+    emergencyContact?: string
+    certification?: string
+    contactPhone?: string
+    licenseNumber?: string
+  }
 }) {
   try {
     const role = data.role || 'Student'
+    const details = data.details || {};
 
     // First, insert the user
     await executeQuery(
-      `INSERT INTO "User" (Username, Email, PasswordHash, Role, CreatedDate) 
-       VALUES (:1, :2, :3, :4, SYSDATE)`,
+      `INSERT INTO "User" (UserID, Username, Email, PasswordHash, Role, CreatedDate) 
+       VALUES (seq_user_id.NEXTVAL, :1, :2, :3, :4, SYSDATE)`,
       [data.username, data.email, data.passwordHash, role],
     )
 
     // Get the UserID that was just created
+    // Note: Assuming username/email is unique, we fetch it back. 
+    // Ideally we use RETURNING but Oracle node driver syntax varies.
     const userResult = await executeQuery(
       `SELECT UserID FROM "User" WHERE Email = :1`,
       [data.email]
@@ -38,24 +49,33 @@ export async function createUser(data: {
     const lastName = nameParts.slice(1).join(' ') || 'Name'
 
     if (role === 'Student') {
+      const dob = details.dateOfBirth || '2000-01-01';
+      const gender = details.gender || 'Other';
+      const emergency = details.emergencyContact || null;
+
       await executeQuery(
-        `INSERT INTO Student (FirstName, LastName, DateOfBirth, Gender, FK_UserID, CreatedDate)
-         VALUES (:1, :2, TO_DATE('2000-01-01', 'YYYY-MM-DD'), 'Other', :3, SYSDATE)`,
-        [firstName, lastName, userId]
+        `INSERT INTO Student (StudentID, FirstName, LastName, DateOfBirth, Gender, EmergencyContactPhone, FK_UserID, CreatedDate)
+         VALUES (seq_student_id.NEXTVAL, :1, :2, TO_DATE(:3, 'YYYY-MM-DD'), :4, :5, :6, SYSDATE)`,
+        [firstName, lastName, dob, gender, emergency, userId]
       )
     } else if (role === 'Coach') {
+      const cert = details.certification || 'Certified Fitness Coach';
+      const phone = details.contactPhone || null;
+
       await executeQuery(
-        `INSERT INTO Coach (FirstName, LastName, Certification, FK_UserID, CreatedDate)
-         VALUES (:1, :2, 'Certified Fitness Coach', :3, SYSDATE)`,
-        [firstName, lastName, userId]
+        `INSERT INTO Coach (CoachID, FirstName, LastName, Certification, ContactPhone, FK_UserID, CreatedDate)
+         VALUES (seq_coach_id.NEXTVAL, :1, :2, :3, :4, :5, SYSDATE)`,
+        [firstName, lastName, cert, phone, userId]
       )
     } else if (role === 'Nurse') {
-      // Generate a unique license number
-      const licenseNumber = `LN${Date.now()}`
+      // Generate a unique license number if not provided
+      const licenseNumber = details.licenseNumber || `LN${Date.now()}`;
+      const phone = details.contactPhone || null; // Accessing contactPhone from details
+
       await executeQuery(
-        `INSERT INTO Nurse (FirstName, LastName, LicenseNumber, FK_UserID, CreatedDate)
-         VALUES (:1, :2, :3, :4, SYSDATE)`,
-        [firstName, lastName, licenseNumber, userId]
+        `INSERT INTO Nurse (NurseID, FirstName, LastName, LicenseNumber, ContactPhone, FK_UserID, CreatedDate)
+         VALUES (seq_nurse_id.NEXTVAL, :1, :2, :3, :4, :5, SYSDATE)`,
+        [firstName, lastName, licenseNumber, phone, userId]
       )
     }
 

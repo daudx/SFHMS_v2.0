@@ -18,8 +18,7 @@ export async function GET(request: NextRequest) {
 
         connection = await getConnection();
 
-        // Get students who have been reviewed by this coach (through fitness logs)
-        // This shows students the coach is actively working with
+        // Get students assigned to this coach via StudentCoach table
         const result = await connection.execute(
             `SELECT DISTINCT
         s.StudentID,
@@ -28,21 +27,21 @@ export async function GET(request: NextRequest) {
         s.Gender,
         TO_CHAR(s.DateOfBirth, 'YYYY-MM-DD') as DateOfBirth,
         s.EmergencyContactPhone,
+        hp.Height,
+        hp.Allergies,
+        hp.BloodType,
+        hp.ChronicConditions,
         (SELECT COUNT(*) FROM FitnessLog fl WHERE fl.FK_StudentID = s.StudentID) as TotalActivities,
         (SELECT COUNT(*) FROM CoachFitnessReview cfr 
          JOIN FitnessLog fl ON cfr.FK_LogID = fl.LogID 
          WHERE fl.FK_StudentID = s.StudentID AND cfr.FK_CoachID = :coachId) as ReviewsCount,
-        (SELECT MAX(fl.LogDate) FROM FitnessLog fl WHERE fl.FK_StudentID = s.StudentID) as LastActivityDate
+        TO_CHAR((SELECT MAX(fl.LogDate) FROM FitnessLog fl WHERE fl.FK_StudentID = s.StudentID), 'YYYY-MM-DD') as LastActivityDate
       FROM Student s
-      WHERE EXISTS (
-        SELECT 1 FROM CoachFitnessReview cfr
-        JOIN FitnessLog fl ON cfr.FK_LogID = fl.LogID
-        WHERE fl.FK_StudentID = s.StudentID 
-        AND cfr.FK_CoachID = :coachId
-      )
+      LEFT JOIN HealthProfile hp ON s.StudentID = hp.FK_StudentID
+      WHERE s.FK_CoachID = :coachId
       ORDER BY s.LastName, s.FirstName`,
             { coachId: parseInt(coachId) },
-            { outFormat: 4001 } // OBJECT format
+            { outFormat: 4002 } // OBJECT format using oracledb.OUT_FORMAT_OBJECT (4002 is numeric value)
         );
         return NextResponse.json({
             success: true,

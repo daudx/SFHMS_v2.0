@@ -45,12 +45,9 @@ export async function GET(request: NextRequest) {
             { outFormat: 4001 }
         );
 
-        // Get upcoming sessions (plans starting in next 7 days)
-        const upcomingResult = await connection.execute(
-            `SELECT COUNT(*) as TOTAL 
-       FROM TrainingPlan 
-       WHERE FK_CoachID = :coachId 
-       AND StartDate BETWEEN SYSDATE AND SYSDATE + 7`,
+        // Get total assessments
+        const assessmentsResult = await connection.execute(
+            `SELECT COUNT(*) as TOTAL FROM FitnessAssessment WHERE FK_CoachID = :coachId`,
             { coachId: parseInt(coachId) },
             { outFormat: 4001 }
         );
@@ -59,7 +56,7 @@ export async function GET(request: NextRequest) {
             totalPlans: plansResult.rows?.[0]?.TOTAL || 0,
             activePlans: activePlansResult.rows?.[0]?.TOTAL || 0,
             reviewsCompleted: reviewsResult.rows?.[0]?.TOTAL || 0,
-            upcomingSessions: upcomingResult.rows?.[0]?.TOTAL || 0,
+            totalAssessments: assessmentsResult.rows?.[0]?.TOTAL || 0,
         };
 
         return NextResponse.json({

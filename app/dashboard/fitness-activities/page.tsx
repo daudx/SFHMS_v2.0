@@ -44,6 +44,7 @@ export default function FitnessActivitiesPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [editingActivity, setEditingActivity] = useState<any>(null);
   const [submitting, setSubmitting] = useState(false);
   const router = useRouter();
   const { toast } = useToast();
@@ -54,7 +55,19 @@ export default function FitnessActivitiesPage() {
 
   const fetchActivities = async () => {
     try {
-      const res = await fetch("/api/fitness-activities");
+      const userStr = sessionStorage.getItem("user");
+      if (!userStr) {
+        router.push("/auth/login");
+        return;
+      }
+
+      const user = JSON.parse(userStr);
+
+      const res = await fetch("/api/fitness-activities", {
+        headers: {
+          "x-user-id": user.userId.toString()
+        }
+      });
 
       if (res.status === 401) {
         router.push("/auth/login");
@@ -85,7 +98,7 @@ export default function FitnessActivitiesPage() {
     setSubmitting(true);
 
     const formData = new FormData(e.currentTarget);
-    const data = {
+    const data: any = {
       activityType: formData.get("activityType"),
       durationMinutes: Number(formData.get("durationMinutes")),
       caloriesBurned: Number(formData.get("caloriesBurned")),
@@ -95,9 +108,16 @@ export default function FitnessActivitiesPage() {
       activityDate: formData.get("activityDate"),
     };
 
+    if (editingActivity) {
+      data.logId = editingActivity.id;
+    }
+
     try {
-      const res = await fetch("/api/fitness-activities", {
-        method: "POST",
+      const url = "/api/fitness-activities";
+      const method = editingActivity ? "PUT" : "POST";
+
+      const res = await fetch(url, {
+        method,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       });
@@ -109,12 +129,13 @@ export default function FitnessActivitiesPage() {
 
       toast({
         title: "Success",
-        description: "Activity logged successfully",
+        description: editingActivity ? "Activity updated successfully" : "Activity logged successfully",
       });
 
       setIsAddDialogOpen(false);
+      setEditingActivity(null);
       await fetchActivities();
-      (e.target as HTMLFormElement).reset();
+      // (e.target as HTMLFormElement).reset(); // might interfere with next edit/add if we don't clear properly, but good fallback
     } catch (error) {
       toast({
         title: "Error",
@@ -228,24 +249,27 @@ export default function FitnessActivitiesPage() {
               Track your workouts and monitor your fitness progress
             </p>
           </div>
-          <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+          <Dialog open={isAddDialogOpen} onOpenChange={(open) => {
+            setIsAddDialogOpen(open);
+            if (!open) setEditingActivity(null);
+          }}>
             <DialogTrigger asChild>
-              <Button className="btn-animate bg-emerald-600 hover:bg-emerald-700">
+              <Button className="btn-animate bg-emerald-600 hover:bg-emerald-700" onClick={() => setEditingActivity(null)}>
                 <Plus className="w-4 h-4 mr-2" />
                 Log Activity
               </Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-[500px]">
               <DialogHeader>
-                <DialogTitle>Log Fitness Activity</DialogTitle>
+                <DialogTitle>{editingActivity ? "Edit Activity" : "Log Fitness Activity"}</DialogTitle>
                 <DialogDescription>
-                  Track your workout and fitness progress
+                  {editingActivity ? "Update your workout details" : "Track your workout and fitness progress"}
                 </DialogDescription>
               </DialogHeader>
               <form onSubmit={handleAddActivity} className="space-y-4">
                 <div>
                   <Label htmlFor="activityType">Activity Type</Label>
-                  <Select name="activityType" required>
+                  <Select name="activityType" defaultValue={editingActivity?.activity_type} required>
                     <SelectTrigger>
                       <SelectValue placeholder="Select activity" />
                     </SelectTrigger>
@@ -270,6 +294,7 @@ export default function FitnessActivitiesPage() {
                     min="1"
                     required
                     placeholder="30"
+                    defaultValue={editingActivity?.duration_minutes}
                   />
                 </div>
                 <div>
@@ -281,6 +306,7 @@ export default function FitnessActivitiesPage() {
                     min="1"
                     required
                     placeholder="250"
+                    defaultValue={editingActivity?.calories_burned}
                   />
                 </div>
                 <div>
@@ -292,6 +318,7 @@ export default function FitnessActivitiesPage() {
                     step="0.1"
                     min="0"
                     placeholder="5.0"
+                    defaultValue={editingActivity?.distance}
                   />
                 </div>
                 <div>
@@ -302,6 +329,7 @@ export default function FitnessActivitiesPage() {
                     type="date"
                     required
                     max={new Date().toISOString().split("T")[0]}
+                    defaultValue={editingActivity ? new Date(editingActivity.activity_date).toISOString().split('T')[0] : undefined}
                   />
                 </div>
                 <div className="flex gap-2 justify-end">
@@ -318,7 +346,7 @@ export default function FitnessActivitiesPage() {
                     disabled={submitting}
                     className="bg-emerald-600 hover:bg-emerald-700"
                   >
-                    {submitting ? "Logging..." : "Log Activity"}
+                    {submitting ? (editingActivity ? "Updating..." : "Logging...") : (editingActivity ? "Update Activity" : "Log Activity")}
                   </Button>
                 </div>
               </form>
@@ -427,13 +455,25 @@ export default function FitnessActivitiesPage() {
                     <p className="text-xs text-gray-500">
                       Log ID: {activity.id}
                     </p>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleDeleteActivity(activity.id)}
-                    >
-                      <Trash2 className="w-4 h-4 text-red-500" />
-                    </Button>
+                    <div className="flex gap-1">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          setEditingActivity(activity);
+                          setIsAddDialogOpen(true);
+                        }}
+                      >
+                        <div className="h-4 w-4 text-blue-500">Edit</div>
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleDeleteActivity(activity.id)}
+                      >
+                        <Trash2 className="w-4 h-4 text-red-500" />
+                      </Button>
+                    </div>
                   </div>
                 </CardContent>
               </Card>

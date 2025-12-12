@@ -44,7 +44,7 @@ export function CoachesTable({
   const [coaches, setCoaches] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
-  const [isCreateOpen, setIsCreateOpen] = useState(false);
+  // Create state removed
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [selectedCoach, setSelectedCoach] = useState<any>(null);
@@ -71,31 +71,7 @@ export function CoachesTable({
     }
   };
 
-  const handleCreate = async (e: React.FormEvent) => {
-    e.preventDefault();
-    try {
-      const response = await fetch(apiEndpoint, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          userId: parseInt(formData.userId),
-          certification: formData.certification,
-          contactPhone: formData.contactPhone,
-        }),
-      });
-
-      if (response.ok) {
-        toast.success("Coach created successfully");
-        setIsCreateOpen(false);
-        setFormData({ userId: "", certification: "", contactPhone: "" });
-        fetchCoaches();
-      } else {
-        toast.error("Failed to create coach");
-      }
-    } catch (error) {
-      toast.error("Error creating coach");
-    }
-  };
+  // handleCreate removed - use Users Management tab instead
 
   const handleUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -172,73 +148,6 @@ export function CoachesTable({
             className="pl-9"
           />
         </div>
-        <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
-          <DialogTrigger asChild>
-            <Button>
-              <Plus className="h-4 w-4 mr-2" />
-              Add Coach
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Create New Coach</DialogTitle>
-              <DialogDescription>
-                Add a new coach to the system
-              </DialogDescription>
-            </DialogHeader>
-            <form onSubmit={handleCreate} className="space-y-4">
-              <div>
-                <Label htmlFor="userId">User ID</Label>
-                <Input
-                  id="userId"
-                  type="number"
-                  value={formData.userId}
-                  onChange={(e) =>
-                    setFormData({ ...formData, userId: e.target.value })
-                  }
-                  required
-                />
-              </div>
-              <div>
-                <Label htmlFor="certification">Certification</Label>
-                <Input
-                  id="certification"
-                  value={formData.certification}
-                  onChange={(e) =>
-                    setFormData({ ...formData, certification: e.target.value })
-                  }
-                  placeholder="e.g., NASM-CPT"
-                  required
-                />
-              </div>
-              <div>
-                <Label htmlFor="contactPhone">Contact Phone</Label>
-                <Input
-                  id="contactPhone"
-                  type="tel"
-                  value={formData.contactPhone}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      contactPhone: e.target.value,
-                    })
-                  }
-                  required
-                />
-              </div>
-              <div className="flex gap-2 justify-end">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setIsCreateOpen(false)}
-                >
-                  Cancel
-                </Button>
-                <Button type="submit">Create</Button>
-              </div>
-            </form>
-          </DialogContent>
-        </Dialog>
       </div>
 
       {loading ? (

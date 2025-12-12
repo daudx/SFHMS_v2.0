@@ -106,38 +106,58 @@ export function Header() {
         <nav className="hidden md:flex items-center gap-6">
           <Link
             href={getDashboardUrl()}
-            className={`text-sm font-medium transition-colors hover:text-blue-600 ${
-              pathname === "/dashboard" ||
+            className={`text-sm font-medium transition-colors hover:text-blue-600 ${pathname === "/dashboard" ||
               pathname === "/dashboard/admin" ||
               pathname === "/dashboard/coach" ||
               pathname === "/dashboard/nurse"
-                ? "text-blue-600"
-                : "text-gray-600"
-            }`}
+              ? "text-blue-600"
+              : "text-gray-600"
+              }`}
           >
             Dashboard
           </Link>
+          {userRole === "Coach" && (
+            <>
+              <Link href="/dashboard/coach/students" className={`text-sm font-medium transition-colors hover:text-blue-600 ${pathname?.startsWith("/dashboard/coach/students") ? "text-blue-600" : "text-gray-600"}`}>
+                My Students
+              </Link>
+              <Link href="/dashboard/coach/fitness-logs" className={`text-sm font-medium transition-colors hover:text-blue-600 ${pathname?.startsWith("/dashboard/coach/fitness-logs") ? "text-blue-600" : "text-gray-600"}`}>
+                Fitness Logs
+              </Link>
+              <Link href="/dashboard/coach/assessments" className={`text-sm font-medium transition-colors hover:text-blue-600 ${pathname?.startsWith("/dashboard/coach/assessments") ? "text-blue-600" : "text-gray-600"}`}>
+                Assessments
+              </Link>
+              <Link href="/dashboard/coach/training-plans" className={`text-sm font-medium transition-colors hover:text-blue-600 ${pathname?.startsWith("/dashboard/coach/training-plans") ? "text-blue-600" : "text-gray-600"}`}>
+                Training Plans
+              </Link>
+            </>
+          )}
+          {userRole === "Nurse" && (
+            <>
+              <Link href="/dashboard/nurse/students" className={`text-sm font-medium transition-colors hover:text-blue-600 ${pathname?.startsWith("/dashboard/nurse/students") ? "text-blue-600" : "text-gray-600"}`}>
+                My Students
+              </Link>
+              <Link href="/dashboard/nurse/medical-records" className={`text-sm font-medium transition-colors hover:text-blue-600 ${pathname?.startsWith("/dashboard/nurse/medical-records") ? "text-blue-600" : "text-gray-600"}`}>
+                Medical Records
+              </Link>
+              <Link href="/dashboard/nurse/appointments" className={`text-sm font-medium transition-colors hover:text-blue-600 ${pathname?.startsWith("/dashboard/nurse/appointments") ? "text-blue-600" : "text-gray-600"}`}>
+                Appointments
+              </Link>
+            </>
+          )}
           {userRole === "Student" && (
             <>
-              <Link
-                href="/dashboard/health-records"
-                className={`text-sm font-medium transition-colors hover:text-blue-600 ${
-                  pathname === "/dashboard/health-records"
-                    ? "text-blue-600"
-                    : "text-gray-600"
-                }`}
-              >
-                Health Records
+              <Link href="/dashboard/profile" className={`text-sm font-medium transition-colors hover:text-blue-600 ${pathname === "/dashboard/profile" ? "text-blue-600" : "text-gray-600"}`}>
+                Health Profile
               </Link>
-              <Link
-                href="/dashboard/fitness-activities"
-                className={`text-sm font-medium transition-colors hover:text-blue-600 ${
-                  pathname === "/dashboard/fitness-activities"
-                    ? "text-blue-600"
-                    : "text-gray-600"
-                }`}
-              >
-                Fitness
+              <Link href="/dashboard/fitness-activities" className={`text-sm font-medium transition-colors hover:text-blue-600 ${pathname === "/dashboard/fitness-activities" ? "text-blue-600" : "text-gray-600"}`}>
+                Fitness Logs
+              </Link>
+              <Link href="/dashboard/my-plan" className={`text-sm font-medium transition-colors hover:text-blue-600 ${pathname === "/dashboard/my-plan" ? "text-blue-600" : "text-gray-600"}`}>
+                My Plan
+              </Link>
+              <Link href="/dashboard/medical-records" className={`text-sm font-medium transition-colors hover:text-blue-600 ${pathname === "/dashboard/medical-records" ? "text-blue-600" : "text-gray-600"}`}>
+                Medical Records
               </Link>
             </>
           )}
@@ -169,24 +189,51 @@ export function Header() {
                 </div>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
-              {userRole === "Student" && (
+              {userRole === "Coach" && (
                 <>
                   <DropdownMenuItem asChild>
-                    <Link
-                      href="/dashboard/health-records"
-                      className="cursor-pointer"
-                    >
-                      <Heart className="mr-2 h-4 w-4" />
-                      <span>Health Records</span>
+                    <Link href="/dashboard/coach/students" className="cursor-pointer">
+                      <User className="mr-2 h-4 w-4" /><span>My Students</span>
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
-                    <Link
-                      href="/dashboard/fitness-activities"
-                      className="cursor-pointer"
-                    >
-                      <Activity className="mr-2 h-4 w-4" />
-                      <span>Fitness Activities</span>
+                    <Link href="/dashboard/coach/fitness-logs" className="cursor-pointer">
+                      <Activity className="mr-2 h-4 w-4" /><span>Fitness Logs</span>
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href="/dashboard/coach/assessments" className="cursor-pointer">
+                      <Dumbbell className="mr-2 h-4 w-4" /><span>Assessments</span>
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href="/dashboard/coach/training-plans" className="cursor-pointer">
+                      <Settings className="mr-2 h-4 w-4" /><span>Training Plans</span>
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                </>
+              )}
+              {userRole === "Student" && (
+                <>
+                  <DropdownMenuItem asChild>
+                    <Link href="/dashboard/profile" className="cursor-pointer">
+                      <Heart className="mr-2 h-4 w-4" /><span>Health Profile</span>
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href="/dashboard/fitness-activities" className="cursor-pointer">
+                      <Activity className="mr-2 h-4 w-4" /><span>Fitness Logs</span>
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href="/dashboard/my-plan" className="cursor-pointer">
+                      <Dumbbell className="mr-2 h-4 w-4" /><span>My Plan</span>
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href="/dashboard/medical-records" className="cursor-pointer">
+                      <Heart className="mr-2 h-4 w-4" /><span>Medical Records</span>
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />

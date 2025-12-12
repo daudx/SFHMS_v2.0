@@ -49,12 +49,12 @@ export function UsersTable() {
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<any>(null);
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<any>({
     username: "",
     email: "",
     fullName: "",
     role: "Student",
-    passwordHash: "default_hash", // TODO: Implement proper password hashing
+    password: "",
   });
 
   useEffect(() => {
@@ -77,10 +77,27 @@ export function UsersTable() {
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
+      // Structure the payload
+      const payload = {
+        username: formData.username,
+        email: formData.email,
+        fullName: formData.fullName,
+        role: formData.role,
+        password: formData.password,
+        details: {
+          dateOfBirth: formData.dateOfBirth,
+          gender: formData.gender,
+          emergencyContact: formData.emergencyContact,
+          certification: formData.certification,
+          contactPhone: formData.contactPhone,
+          licenseNumber: formData.licenseNumber
+        }
+      };
+
       const response = await fetch("/api/admin/users", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(payload),
       });
 
       if (response.ok) {
@@ -91,11 +108,12 @@ export function UsersTable() {
           email: "",
           fullName: "",
           role: "Student",
-          passwordHash: "default_hash",
+          password: "",
         });
         fetchUsers();
       } else {
-        toast.error("Failed to create user");
+        const errorData = await response.json();
+        toast.error(errorData.error || "Failed to create user");
       }
     } catch (error) {
       toast.error("Error creating user");
@@ -158,7 +176,7 @@ export function UsersTable() {
       email: user.EMAIL || "",
       fullName: user.FULLNAME || "",
       role: user.ROLE || "Student",
-      passwordHash: "default_hash",
+      password: "", // Keep password empty on edit
     });
     setIsEditOpen(true);
   };
@@ -209,68 +227,103 @@ export function UsersTable() {
               </DialogDescription>
             </DialogHeader>
             <form onSubmit={handleCreate} className="space-y-4">
-              <div>
-                <Label htmlFor="username">Username</Label>
-                <Input
-                  id="username"
-                  value={formData.username}
-                  onChange={(e) =>
-                    setFormData({ ...formData, username: e.target.value })
-                  }
-                  required
-                />
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="username">Username</Label>
+                  <Input id="username" value={formData.username} onChange={(e) => setFormData({ ...formData, username: e.target.value })} required />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="email">Email</Label>
+                  <Input id="email" type="email" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} required />
+                </div>
               </div>
-              <div>
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  value={formData.email}
-                  onChange={(e) =>
-                    setFormData({ ...formData, email: e.target.value })
-                  }
-                  required
-                />
-              </div>
-              <div>
+
+              <div className="space-y-2">
                 <Label htmlFor="fullName">Full Name</Label>
-                <Input
-                  id="fullName"
-                  value={formData.fullName}
-                  onChange={(e) =>
-                    setFormData({ ...formData, fullName: e.target.value })
-                  }
-                  required
-                />
+                <Input id="fullName" value={formData.fullName} onChange={(e) => setFormData({ ...formData, fullName: e.target.value })} required />
               </div>
-              <div>
-                <Label htmlFor="role">Role</Label>
-                <Select
-                  value={formData.role}
-                  onValueChange={(val) =>
-                    setFormData({ ...formData, role: val })
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Student">Student</SelectItem>
-                    <SelectItem value="Coach">Coach</SelectItem>
-                    <SelectItem value="Nurse">Nurse</SelectItem>
-                    <SelectItem value="Admin">Admin</SelectItem>
-                  </SelectContent>
-                </Select>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="role">Role</Label>
+                  <Select value={formData.role} onValueChange={(val) => setFormData({ ...formData, role: val })}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Student">Student</SelectItem>
+                      <SelectItem value="Coach">Coach</SelectItem>
+                      <SelectItem value="Nurse">Nurse</SelectItem>
+                      <SelectItem value="Admin">Admin</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="password">Password</Label>
+                  <Input id="password" type="password" value={formData.password} onChange={(e) => setFormData({ ...formData, password: e.target.value })} required placeholder="••••••••" minLength={6} />
+                </div>
               </div>
-              <div className="flex gap-2 justify-end">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setIsCreateOpen(false)}
-                >
-                  Cancel
-                </Button>
-                <Button type="submit">Create</Button>
+
+              {/* Dynamic Fields based on Role */}
+              <div className="border-t pt-4 mt-2">
+                <h4 className="text-sm font-medium mb-3 text-muted-foreground">
+                  {formData.role === 'Student' ? 'Student Details' :
+                    formData.role === 'Coach' ? 'Coach Profile' :
+                      formData.role === 'Nurse' ? 'Nurse Credentials' : 'Admin Details'}
+                </h4>
+
+                {formData.role === 'Student' && (
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label>Date of Birth</Label>
+                      <Input type="date" onChange={(e) => setFormData({ ...formData, dateOfBirth: e.target.value })} required />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Gender</Label>
+                      <Select onValueChange={(val) => setFormData({ ...formData, gender: val })}>
+                        <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="M">Male</SelectItem>
+                          <SelectItem value="F">Female</SelectItem>
+                          <SelectItem value="Other">Other</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2 col-span-2">
+                      <Label>Emergency Contact</Label>
+                      <Input placeholder="Phone number" onChange={(e) => setFormData({ ...formData, emergencyContact: e.target.value })} />
+                    </div>
+                  </div>
+                )}
+
+                {formData.role === 'Coach' && (
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label>Certification</Label>
+                      <Input placeholder="e.g. Certified Personal Trainer" onChange={(e) => setFormData({ ...formData, certification: e.target.value })} />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Contact Phone</Label>
+                      <Input placeholder="+1 234 567 890" onChange={(e) => setFormData({ ...formData, contactPhone: e.target.value })} />
+                    </div>
+                  </div>
+                )}
+
+                {formData.role === 'Nurse' && (
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label>License Number</Label>
+                      <Input placeholder="e.g. RN-123456" onChange={(e) => setFormData({ ...formData, licenseNumber: e.target.value })} />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Contact Phone</Label>
+                      <Input placeholder="+1 234 567 890" onChange={(e) => setFormData({ ...formData, contactPhone: e.target.value })} />
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div className="flex gap-2 justify-end pt-2">
+                <Button type="button" variant="outline" onClick={() => setIsCreateOpen(false)}>Cancel</Button>
+                <Button type="submit">Create User</Button>
               </div>
             </form>
           </DialogContent>

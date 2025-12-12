@@ -38,7 +38,7 @@ export function StudentsTable() {
   const [students, setStudents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
-  const [isCreateOpen, setIsCreateOpen] = useState(false);
+  // Create state removed
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState<any>(null);
@@ -66,37 +66,7 @@ export function StudentsTable() {
     }
   };
 
-  const handleCreate = async (e: React.FormEvent) => {
-    e.preventDefault();
-    try {
-      const response = await fetch("/api/admin/students", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          userId: parseInt(formData.userId),
-          dateOfBirth: formData.dateOfBirth,
-          enrollmentDate: formData.enrollmentDate,
-          major: formData.major,
-        }),
-      });
-
-      if (response.ok) {
-        toast.success("Student created successfully");
-        setIsCreateOpen(false);
-        setFormData({
-          userId: "",
-          dateOfBirth: "",
-          enrollmentDate: "",
-          major: "",
-        });
-        fetchStudents();
-      } else {
-        toast.error("Failed to create student");
-      }
-    } catch (error) {
-      toast.error("Error creating student");
-    }
-  };
+  // handleCreate removed - use Users Management tab instead
 
   const handleUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -181,82 +151,6 @@ export function StudentsTable() {
             className="pl-9"
           />
         </div>
-        <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
-          <DialogTrigger asChild>
-            <Button>
-              <Plus className="h-4 w-4 mr-2" />
-              Add Student
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Create New Student</DialogTitle>
-              <DialogDescription>
-                Add a new student to the system
-              </DialogDescription>
-            </DialogHeader>
-            <form onSubmit={handleCreate} className="space-y-4">
-              <div>
-                <Label htmlFor="userId">User ID</Label>
-                <Input
-                  id="userId"
-                  type="number"
-                  value={formData.userId}
-                  onChange={(e) =>
-                    setFormData({ ...formData, userId: e.target.value })
-                  }
-                  required
-                />
-              </div>
-              <div>
-                <Label htmlFor="dateOfBirth">Date of Birth</Label>
-                <Input
-                  id="dateOfBirth"
-                  type="date"
-                  value={formData.dateOfBirth}
-                  onChange={(e) =>
-                    setFormData({ ...formData, dateOfBirth: e.target.value })
-                  }
-                  required
-                />
-              </div>
-              <div>
-                <Label htmlFor="enrollmentDate">Enrollment Date</Label>
-                <Input
-                  id="enrollmentDate"
-                  type="date"
-                  value={formData.enrollmentDate}
-                  onChange={(e) =>
-                    setFormData({ ...formData, enrollmentDate: e.target.value })
-                  }
-                  required
-                />
-              </div>
-              <div>
-                <Label htmlFor="major">Major</Label>
-                <Input
-                  id="major"
-                  value={formData.major}
-                  onChange={(e) =>
-                    setFormData({ ...formData, major: e.target.value })
-                  }
-                  placeholder="e.g., Computer Science"
-                  required
-                />
-              </div>
-              <div className="flex gap-2 justify-end">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setIsCreateOpen(false)}
-                >
-                  Cancel
-                </Button>
-                <Button type="submit">Create</Button>
-              </div>
-            </form>
-          </DialogContent>
-        </Dialog>
       </div>
 
       {loading ? (
@@ -296,13 +190,13 @@ export function StudentsTable() {
                     <TableCell>
                       {student.DATEOFBIRTH
                         ? new Date(student.DATEOFBIRTH).toLocaleDateString(
-                            "en-US",
-                            {
-                              year: "numeric",
-                              month: "2-digit",
-                              day: "2-digit",
-                            }
-                          )
+                          "en-US",
+                          {
+                            year: "numeric",
+                            month: "2-digit",
+                            day: "2-digit",
+                          }
+                        )
                         : "N/A"}
                     </TableCell>
                     <TableCell>
